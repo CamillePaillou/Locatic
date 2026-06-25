@@ -3,4 +3,17 @@
 }
 
 <h1>Bienvenue sur Locatic</h1>
-<p>Gérez votre parc de véhicules, vos clients et vos réservations.</p>
+<p class="text-muted mb-4">Gérez votre parc de véhicules, vos clients et vos réservations.</p>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Marques &amp; Modèles</h5>
+                <p class="card-text">Gérez les constructeurs et leurs modèles.</p>
+                <a asp-controller="CarBrand" asp-action="Index" class="btn btn-outline-primary me-2">Marques</a>
+                <a asp-controller="CarModel" asp-action="Index" class="btn btn-outline-primary">Modèles</a>
+            </div>
+        </div>
+    </div>
+</div>

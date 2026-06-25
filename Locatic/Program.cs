@@ -11,6 +11,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<ICarBrandRepository, CarBrandSqlLiteRepository>();
+builder.Services.AddScoped<ICarModelRepository, CarModelSqlLiteRepository>();
 
 var app = builder.Build();
 
