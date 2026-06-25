@@ -1,3 +1,4 @@
+using Locatic.Data.Seeds;
 using Locatic.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,5 +15,10 @@ namespace Locatic.Data
         public DbSet<Car> Cars { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.SeedBeginning();
+        }
     }
 }
