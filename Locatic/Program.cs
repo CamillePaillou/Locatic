@@ -1,4 +1,6 @@
 using Locatic.Data;
+using Locatic.Interfaces;
+using Locatic.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +9,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddScoped<ICarBrandRepository, CarBrandSqlLiteRepository>();
 
 var app = builder.Build();
 
