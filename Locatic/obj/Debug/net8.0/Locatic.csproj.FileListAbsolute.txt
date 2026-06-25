@@ -12,3 +12,4 @@
 /Users/admin/Documents/dev/Locatic/Locatic/Locatic/obj/Debug/net8.0/Locatic.pdb
 /Users/admin/Documents/dev/Locatic/Locatic/Locatic/obj/Debug/net8.0/Locatic.genruntimeconfig.cache
 /Users/admin/Documents/dev/Locatic/Locatic/Locatic/obj/Debug/net8.0/ref/Locatic.dll
+/Users/admin/Documents/dev/Locatic/Locatic/Locatic/obj/Debug/net8.0/Locatic.sourcelink.json
