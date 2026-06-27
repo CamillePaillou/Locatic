@@ -13,6 +13,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ICarBrandRepository, CarBrandSqlLiteRepository>();
 builder.Services.AddScoped<ICarModelRepository, CarModelSqlLiteRepository>();
 builder.Services.AddScoped<ICarRepository, CarSqlLiteRepository>();
+builder.Services.AddScoped<IClientRepository, ClientSqlLiteRepository>();
 
 var app = builder.Build();
 
