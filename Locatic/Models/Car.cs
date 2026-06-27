@@ -24,7 +24,7 @@ namespace Locatic.Models
         public int NbSeats { get; set; }
         public Fuel Fuel { get; set; }
 
-        public int CarModelId { get; set; }
-        public CarModel Model { get; set; } = null!;
+        public int CarModelId { get; set; } // ← clé étrangère
+        public CarModel Model { get; set; } = null!;  // ← navigation vers CarModel
     }
 }

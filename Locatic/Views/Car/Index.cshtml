@@ -1,0 +1,43 @@
+@model List<Car>
+@{
+    ViewData["Title"] = "Voitures";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Voitures</h1>
+    <a asp-action="Create" class="btn btn-primary">Ajouter une voiture</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Immatriculation</th>
+            <th>Marque</th>
+            <th>Modèle</th>
+            <th>Année</th>
+            <th>Tarif/jour</th>
+            <th>Places</th>
+            <th>Carburant</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var car in Model)
+        {
+            <tr>
+                <td>@car.Registration</td>
+                <td>@car.Model.Brand.Name</td>
+                <td>@car.Model.Name</td>
+                <td>@car.Year</td>
+                <td>@car.DayRate €</td>
+                <td>@car.NbSeats</td>
+                <td>@car.Fuel</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@car.Id" class="btn btn-sm btn-outline-secondary">Détail</a>
+                    <a asp-action="Edit" asp-route-id="@car.Id" class="btn btn-sm btn-outline-primary">Modifier</a>
+                    <a asp-action="Delete" asp-route-id="@car.Id" class="btn btn-sm btn-outline-danger">Supprimer</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
