@@ -9,10 +9,31 @@
     <div class="col-md-4">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">Marques &amp; Modèles</h5>
-                <p class="card-text">Gérez les constructeurs et leurs modèles.</p>
+                <h5 class="card-title">Marques, Modèles et Voitures</h5>
+                <p class="card-text">Gérez les voitures.</p>
                 <a asp-controller="CarBrand" asp-action="Index" class="btn btn-outline-primary me-2">Marques</a>
                 <a asp-controller="CarModel" asp-action="Index" class="btn btn-outline-primary">Modèles</a>
+                <a asp-controller="Car" asp-action="Index" class="btn btn-outline-primary">Voitures</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Clients</h5>
+                <p class="card-text">Gérez les clients.</p>
+                <a asp-controller="Client" asp-action="Index" class="btn btn-outline-primary me-2">Voir les clients</a>
+                <a asp-controller="Client" asp-action="Create" class="btn btn-outline-success">Ajouter</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Réservations</h5>
+                <p class="card-text">Gérez les réservations.</p>
+                <a asp-controller="Booking" asp-action="Index" class="btn btn-outline-primary me-2">Voir les réservations</a>
+                <a asp-controller="Booking" asp-action="Create" class="btn btn-outline-success">Ajouter</a>
             </div>
         </div>
     </div>
