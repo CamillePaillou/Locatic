@@ -14,6 +14,7 @@ builder.Services.AddScoped<ICarBrandRepository, CarBrandSqlLiteRepository>();
 builder.Services.AddScoped<ICarModelRepository, CarModelSqlLiteRepository>();
 builder.Services.AddScoped<ICarRepository, CarSqlLiteRepository>();
 builder.Services.AddScoped<IClientRepository, ClientSqlLiteRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingSqlLiteRepository>();
 
 var app = builder.Build();
 

@@ -1,0 +1,43 @@
+@model List<Booking>
+@{
+    ViewData["Title"] = "Réservations";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Réservations</h1>
+    <a asp-action="Create" class="btn btn-primary">Ajouter une réservation</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Client</th>
+            <th>Voiture</th>
+            <th>Début</th>
+            <th>Fin</th>
+            <th>Jours</th>
+            <th>Total</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var booking in Model)
+        {
+            var nbDays = booking.EndDate.DayNumber - booking.StartDate.DayNumber;
+            var total = nbDays * booking.Car.DayRate;
+            <tr>
+                <td>@booking.Client.FirstName @booking.Client.LastName</td>
+                <td>@booking.Car.Model.Brand.Name @booking.Car.Model.Name — @booking.Car.Registration</td>
+                <td>@booking.StartDate.ToString("dd/MM/yyyy")</td>
+                <td>@booking.EndDate.ToString("dd/MM/yyyy")</td>
+                <td>@nbDays</td>
+                <td>@total €</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@booking.Id" class="btn btn-sm btn-outline-secondary">Détail</a>
+                    <a asp-action="Edit" asp-route-id="@booking.Id" class="btn btn-sm btn-outline-primary">Modifier</a>
+                    <a asp-action="Delete" asp-route-id="@booking.Id" class="btn btn-sm btn-outline-danger">Supprimer</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

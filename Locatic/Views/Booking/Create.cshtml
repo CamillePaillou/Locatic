@@ -1,0 +1,41 @@
+@model BookingCreateVM
+@{
+    ViewData["Title"] = "Ajouter une réservation";
+}
+
+<h1>Ajouter une réservation</h1>
+
+<form asp-action="Create" method="post" class="mt-3" style="max-width: 500px">
+    <div class="mb-3">
+        <label asp-for="ClientId" class="form-label">Client</label>
+        <select asp-for="ClientId" class="form-select"
+                asp-items="@(new SelectList(Model.Clients, "Id", "LastName"))">
+            <option value="">-- Choisir un client --</option>
+        </select>
+        <span asp-validation-for="ClientId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="CarId" class="form-label">Voiture</label>
+        <select asp-for="CarId" class="form-select"
+                asp-items="@(new SelectList(Model.Cars, "Id", "Registration"))">
+            <option value="">-- Choisir une voiture --</option>
+        </select>
+        <span asp-validation-for="CarId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="StartDate" class="form-label">Date de début</label>
+        <input asp-for="StartDate" class="form-control" type="date" />
+        <span asp-validation-for="StartDate" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="EndDate" class="form-label">Date de fin</label>
+        <input asp-for="EndDate" class="form-control" type="date" />
+        <span asp-validation-for="EndDate" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Enregistrer</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Annuler</a>
+</form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
