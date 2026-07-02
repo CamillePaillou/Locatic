@@ -22,6 +22,14 @@ builder.Services.AddScoped<IBookingRepository, BookingSqlLiteRepository>();
 
 var app = builder.Build();
 
+// Applique les migrations en attente au démarrage : indispensable en conteneur,
+// où le volume SQLite peut être vide (premier déploiement) et où il n'y a
+// personne pour lancer `dotnet ef database update` à la main.
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
