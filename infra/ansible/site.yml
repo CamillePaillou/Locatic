@@ -1,0 +1,76 @@
+---
+- name: Orchestrer le déploiement local de Locatic sur minikube
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    terraform_dir: "{{ playbook_dir }}/../terraform"
+    kubernetes_manifests_dir: "{{ playbook_dir }}/../kubernetes"
+    kube_context: minikube
+
+  tasks:
+    # --- 1. Prérequis ---------------------------------------------------
+    - name: Vérifier que les outils nécessaires sont installés
+      ansible.builtin.command: "which {{ item }}"
+      loop:
+        - terraform
+        - kubectl
+        - minikube
+      loop_control:
+        label: "{{ item }}"
+      register: tool_check
+      changed_when: false
+
+    - name: Vérifier que minikube est démarré
+      ansible.builtin.command: minikube status
+      register: minikube_status
+      changed_when: false
+
+    # --- 2. Récupération des sorties Terraform ---------------------------
+    - name: Lire les outputs Terraform (namespace, PVC SQLite)
+      ansible.builtin.command: "terraform -chdir={{ terraform_dir }} output -json"
+      register: terraform_outputs_raw
+      changed_when: false
+
+    - name: Exposer les outputs Terraform comme variables Ansible
+      ansible.builtin.set_fact:
+        locatic_namespace: "{{ (terraform_outputs_raw.stdout | from_json).namespace.value }}"
+        locatic_sqlite_pvc: "{{ (terraform_outputs_raw.stdout | from_json).sqlite_pvc_name.value }}"
+
+    - name: Afficher les valeurs récupérées (preuve du lien Terraform -> Ansible)
+      ansible.builtin.debug:
+        msg:
+          - "Namespace Kubernetes : {{ locatic_namespace }}"
+          - "PVC SQLite : {{ locatic_sqlite_pvc }}"
+
+    # --- 3. Application des ressources Kubernetes -------------------------
+    # Le dossier infra/kubernetes/ est rempli à l'étape 13 (Nginx, Deployment
+    # applicatif, Service). Cette tâche est prête à les appliquer dès qu'ils
+    # existeront, sans modification de ce playbook.
+    - name: Lister les manifestes Kubernetes disponibles
+      ansible.builtin.find:
+        paths: "{{ kubernetes_manifests_dir }}"
+        patterns:
+          - "*.yml"
+          - "*.yaml"
+        recurse: true
+      register: k8s_manifests
+
+    - name: Avertir si aucun manifeste Kubernetes n'est encore présent
+      ansible.builtin.debug:
+        msg: >-
+          Aucun manifeste trouvé dans {{ kubernetes_manifests_dir }} pour
+          l'instant — normal avant l'étape 13.
+      when: k8s_manifests.matched == 0
+
+    - name: Appliquer les ressources Kubernetes (Nginx, application, monitoring)
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ locatic_namespace }}"
+        context: "{{ kube_context }}"
+        src: "{{ item.path }}"
+      loop: "{{ k8s_manifests.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      when: k8s_manifests.matched > 0
