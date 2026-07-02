@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: locatic-nginx-svc
+  labels:
+    app: locatic-nginx
+spec:
+  # Le seul point d'entrée utilisateur du déploiement.
+  type: "{{ service_type }}"
+  selector:
+    app: locatic-nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

@@ -6,8 +6,11 @@
 
   vars:
     terraform_dir: "{{ playbook_dir }}/../terraform"
-    kubernetes_manifests_dir: "{{ playbook_dir }}/../kubernetes"
+    kubernetes_manifests_dir: "{{ playbook_dir }}/../kubernetes/templates"
     kube_context: minikube
+
+  vars_files:
+    - vars/locatic.yml
 
   tasks:
     # --- 1. Prérequis ---------------------------------------------------
@@ -44,33 +47,60 @@
           - "Namespace Kubernetes : {{ locatic_namespace }}"
           - "PVC SQLite : {{ locatic_sqlite_pvc }}"
 
-    # --- 3. Application des ressources Kubernetes -------------------------
-    # Le dossier infra/kubernetes/ est rempli à l'étape 13 (Nginx, Deployment
-    # applicatif, Service). Cette tâche est prête à les appliquer dès qu'ils
-    # existeront, sans modification de ce playbook.
-    - name: Lister les manifestes Kubernetes disponibles
-      ansible.builtin.find:
-        paths: "{{ kubernetes_manifests_dir }}"
-        patterns:
-          - "*.yml"
-          - "*.yaml"
-        recurse: true
-      register: k8s_manifests
+    # --- 3. Identifiants GHCR (jamais committés) --------------------------
+    - name: Lire les identifiants GHCR depuis l'environnement
+      ansible.builtin.set_fact:
+        ghcr_username: "{{ lookup('env', 'GHCR_USERNAME') }}"
+        ghcr_token: "{{ lookup('env', 'GHCR_TOKEN') }}"
+      no_log: true
 
-    - name: Avertir si aucun manifeste Kubernetes n'est encore présent
-      ansible.builtin.debug:
-        msg: >-
-          Aucun manifeste trouvé dans {{ kubernetes_manifests_dir }} pour
-          l'instant — normal avant l'étape 13.
-      when: k8s_manifests.matched == 0
+    - name: Vérifier que les identifiants GHCR sont bien fournis
+      ansible.builtin.assert:
+        that:
+          - ghcr_username | length > 0
+          - ghcr_token | length > 0
+        fail_msg: >-
+          GHCR_USERNAME et GHCR_TOKEN doivent être exportés avant de lancer
+          ce playbook (export GHCR_USERNAME=... GHCR_TOKEN=...), pour créer
+          le secret d'accès à l'image privée.
+        success_msg: "Identifiants GHCR trouvés dans l'environnement."
 
-    - name: Appliquer les ressources Kubernetes (Nginx, application, monitoring)
+    # --- 4. Rendu et application des manifestes Kubernetes -----------------
+    # Le secret est appliqué à part, avec no_log, pour ne jamais faire
+    # apparaître les identifiants GHCR dans la sortie du playbook. Les
+    # autres ressources restent visibles pour un débogage normal.
+    - name: Rendre et appliquer le secret GHCR
       kubernetes.core.k8s:
         state: present
         namespace: "{{ locatic_namespace }}"
         context: "{{ kube_context }}"
-        src: "{{ item.path }}"
-      loop: "{{ k8s_manifests.files }}"
+        definition: "{{ lookup('template', kubernetes_manifests_dir + '/secret-ghcr.yaml.j2') | from_yaml }}"
+      no_log: true
+
+    - name: Lister les autres templates Kubernetes disponibles
+      ansible.builtin.find:
+        paths: "{{ kubernetes_manifests_dir }}"
+        patterns:
+          - "*.yml.j2"
+          - "*.yaml.j2"
+        excludes: "secret-ghcr.yaml.j2"
+        recurse: true
+      register: k8s_templates
+
+    - name: Avertir si aucun autre template Kubernetes n'est encore présent
+      ansible.builtin.debug:
+        msg: >-
+          Aucun template trouvé dans {{ kubernetes_manifests_dir }} (à part
+          le secret GHCR).
+      when: k8s_templates.matched == 0
+
+    - name: Rendre et appliquer les ressources Kubernetes (Nginx, application, monitoring)
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ locatic_namespace }}"
+        context: "{{ kube_context }}"
+        definition: "{{ lookup('template', item.path) | from_yaml }}"
+      loop: "{{ k8s_templates.files }}"
       loop_control:
         label: "{{ item.path | basename }}"
-      when: k8s_manifests.matched > 0
+      when: k8s_templates.matched > 0

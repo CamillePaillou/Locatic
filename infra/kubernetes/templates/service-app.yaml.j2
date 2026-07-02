@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: locatic-app-svc
+  labels:
+    app: locatic
+spec:
+  # ClusterIP volontairement : l'app ne doit jamais être exposée
+  # directement, uniquement joignable depuis le Nginx du cluster.
+  type: ClusterIP
+  selector:
+    app: locatic
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

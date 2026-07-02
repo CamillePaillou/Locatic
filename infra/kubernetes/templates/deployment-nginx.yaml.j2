@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locatic-nginx
+  labels:
+    app: locatic-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: locatic-nginx
+  template:
+    metadata:
+      labels:
+        app: locatic-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: "{{ nginx_image }}"
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            requests:
+              cpu: "{{ nginx_resources.requests.cpu }}"
+              memory: "{{ nginx_resources.requests.memory }}"
+            limits:
+              cpu: "{{ nginx_resources.limits.cpu }}"
+              memory: "{{ nginx_resources.limits.memory }}"
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-config

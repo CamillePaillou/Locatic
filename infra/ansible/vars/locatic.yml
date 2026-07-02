@@ -1,0 +1,48 @@
+# Point d'entrée unique pour configurer le déploiement Kubernetes de Locatic.
+# Modifier une valeur ici suffit : le playbook rend les templates et les
+# réapplique, pas besoin de toucher aux fichiers .yaml.j2 eux-mêmes.
+
+# --- Application ------------------------------------------------------
+app_image_repository: ghcr.io/camillepaillou/locatic
+app_image_tag: latest
+app_replicas: 2
+
+app_env:
+  ASPNETCORE_ENVIRONMENT: Production
+
+app_resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+# Chemin où le volume persistant SQLite (créé par Terraform) est monté
+# dans le conteneur applicatif.
+sqlite_mount_path: /data
+
+# --- Nginx (reverse proxy) ---------------------------------------------
+nginx_image: "nginx:1.27-alpine"
+
+nginx_resources:
+  requests:
+    cpu: "50m"
+    memory: "32Mi"
+  limits:
+    cpu: "200m"
+    memory: "64Mi"
+
+# NodePort (simple sur minikube, via `minikube service`) ou LoadBalancer
+# (nécessite `minikube tunnel` en tâche de fond).
+service_type: NodePort
+
+# --- Registry privée (GHCR) ---------------------------------------------
+ghcr_registry: ghcr.io
+# Réutilise les identifiants déjà enregistrés localement par
+# `docker login ghcr.io` — aucun secret dupliqué à gérer à part.
+docker_config_path: "~/.docker/config.json"
+
+# --- Monitoring (branché à l'étape 17, préparé dès maintenant) -----------
+metrics_port: 8080
+metrics_path: /metrics
