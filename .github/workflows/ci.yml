@@ -63,13 +63,13 @@ jobs:
 
       - name: Scan de sécurité de l'image (Trivy)
         uses: aquasecurity/trivy-action@v0.33.1
-        env:
-          # Authentifie le téléchargement du binaire Trivy auprès de l'API
-          # GitHub : sans ça, les requêtes anonymes des runners partagés
-          # tombent vite sur la limite de taux (rate limit).
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           image-ref: locatic:${{ github.sha }}
+          # La version par défaut de cette action (v0.65.0) correspond à une
+          # release Trivy supprimée du dépôt GitHub : le téléchargement du
+          # binaire échoue silencieusement. On force une version toujours
+          # disponible (https://github.com/aquasecurity/setup-trivy/issues/30).
+          version: v0.72.0
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
           format: 'table'
