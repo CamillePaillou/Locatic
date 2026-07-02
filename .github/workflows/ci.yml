@@ -38,13 +38,34 @@ jobs:
       - name: Test
         run: dotnet test app/Locatic.sln --no-build --configuration Release
 
-  # Stage "build" + "scan" : construit l'image Docker (sans la publier) et la
-  # scanne avec Trivy. Les deux sont regroupés dans le même job car ils
-  # travaillent sur la même image fraîchement construite : la séparer en deux
-  # jobs forcerait soit un rebuild inutile, soit un transfert d'artefact entre
-  # jobs pour rien.
+  # Stage "scan du dépôt" : cherche des secrets committés par erreur et des
+  # mauvaises pratiques dans le Dockerfile. Ne dépend ni du build .NET ni de
+  # l'image Docker, donc tourne en parallèle de `test` pour un retour rapide.
+  # Complémentaire du scan d'image ci-dessous (angle différent : le code
+  # source, pas les paquets installés dans l'image finale).
+  source-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan du dépôt (secrets, config Dockerfile)
+        uses: aquasecurity/trivy-action@v0.33.1
+        with:
+          scan-type: 'fs'
+          scan-ref: 'app/'
+          scanners: 'vuln,secret,config'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+          format: 'table'
+          version: v0.72.0
+
+  # Stage "build" + "scan d'image" : construit l'image Docker (sans la
+  # publier) et la scanne avec Trivy. Les deux sont regroupés dans le même
+  # job car ils travaillent sur la même image fraîchement construite : la
+  # séparer en deux jobs forcerait soit un rebuild inutile, soit un transfert
+  # d'artefact entre jobs pour rien.
   build:
-    needs: test
+    needs: [test, source-scan]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
