@@ -1,0 +1,83 @@
+{
+  "title": "Locatic - Vue d'ensemble",
+  "tags": ["locatic"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "App - Débit de requêtes",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_received_total{namespace=\"locatic\"}[5m])) by (controller, action, code)",
+          "legendFormat": "{{controller}}/{{action}} ({{code}})"
+        }
+      ]
+    },
+    {
+      "title": "App - Latence P95",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=\"locatic\"}[5m])) by (le))",
+          "legendFormat": "P95"
+        }
+      ]
+    },
+    {
+      "title": "Nginx - Connexions actives",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "nginx_connections_active",
+          "legendFormat": "actives"
+        }
+      ]
+    },
+    {
+      "title": "Nginx - Débit de requêtes",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(nginx_http_requests_total[5m])",
+          "legendFormat": "req/s"
+        }
+      ]
+    },
+    {
+      "title": "Pods Locatic - état (1 = up)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(up{namespace=\"locatic\"}) by (job)",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "title": "Volume SQLite - état (1 = Bound)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 16 },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "kube_persistentvolumeclaim_status_phase{namespace=\"locatic\", persistentvolumeclaim=\"locatic-sqlite-pvc\", phase=\"Bound\"}",
+          "legendFormat": "PVC Bound"
+        }
+      ]
+    }
+  ]
+}

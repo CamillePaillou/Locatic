@@ -103,15 +103,24 @@
             adminPassword: "{{ grafana_admin_password }}"
             service:
               type: "{{ monitoring_service_type }}"
+            # Dashboard "as code" : le chart génère lui-même le ConfigMap
+            # avec les bons labels, dans le namespace monitoring — pas
+            # besoin de gérer la découverte cross-namespace pour ça.
+            dashboards:
+              default:
+                locatic-overview:
+                  json: "{{ lookup('file', playbook_dir + '/files/grafana-dashboard-locatic.json') }}"
           prometheus:
             prometheusSpec:
-              # Sans ça, Prometheus n'accepte de scraper que des
-              # ServiceMonitor/PodMonitor du namespace "monitoring" —
-              # notre app et Nginx tournent dans "locatic".
+              # Sans ça, Prometheus n'accepte de scraper/déclencher que les
+              # ServiceMonitor/PodMonitor/PrometheusRule du namespace
+              # "monitoring" — notre app et Nginx tournent dans "locatic".
               serviceMonitorSelectorNilUsesHelmValues: false
               podMonitorSelectorNilUsesHelmValues: false
+              ruleSelectorNilUsesHelmValues: false
               podMonitorNamespaceSelector: {}
               serviceMonitorNamespaceSelector: {}
+              ruleNamespaceSelector: {}
               resources: "{{ monitoring_prometheus_resources }}"
               retention: "{{ monitoring_retention }}"
       no_log: true

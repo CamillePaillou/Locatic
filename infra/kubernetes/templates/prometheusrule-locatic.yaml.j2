@@ -1,0 +1,44 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: locatic-alerts
+spec:
+  groups:
+    - name: locatic-app
+      rules:
+        - alert: LocaticAppDown
+          expr: up{namespace="locatic", job="locatic/locatic-app"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "L'application Locatic ne répond plus"
+            description: "Le pod {% raw %}{{ $labels.pod }}{% endraw %} est down depuis plus d'1 minute."
+
+        - alert: LocaticHighErrorRate
+          expr: >-
+            sum(rate(http_requests_received_total{namespace="locatic",code=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_received_total{namespace="locatic"}[5m])) > 0.05
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Taux d'erreur élevé sur Locatic"
+            description: "Plus de 5% de réponses 5xx sur les 5 dernières minutes."
+
+    - name: locatic-storage
+      rules:
+        # kubelet_volume_stats_* (usage réel en octets) n'est pas exposée par
+        # le provisioner hostPath de minikube. On se base donc sur l'état de
+        # liaison de la PVC (fourni par kube-state-metrics, toujours
+        # disponible) plutôt qu'un seuil de remplissage.
+        - alert: LocaticStorageNotBound
+          expr: >-
+            kube_persistentvolumeclaim_status_phase{namespace="locatic",persistentvolumeclaim="{{ locatic_sqlite_pvc }}",phase="Bound"} != 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Volume SQLite non lié"
+            description: "La PVC {{ locatic_sqlite_pvc }} n'est plus à l'état Bound depuis plus de 5 minutes."
