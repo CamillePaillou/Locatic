@@ -3,7 +3,7 @@
 ## Git / GitHub
 
 - [x] Règle de protection de branche `main` (Settings > Rules), montrant "Require a pull request", les checks obligatoires (`test`, `source-scan`), et le blocage suppression/force-push
-- [ ] Une Pull Request fusionnée, avec les checks CI verts
+- [x] Une Pull Request fusionnée, avec les checks CI verts
 
 ![Ruleset `main` : statut `Active`, cible la branche `main` ("Applies to 1 target: main")](branches/branches-ruleset-main-active.png)
 
@@ -11,18 +11,26 @@
 
 ![Paramètres Actions du dépôt : permissions du `GITHUB_TOKEN` en lecture/écriture et politique d'approbation des workflows pour les contributeurs](branches/branches-actions-workflow-permissions.png)
 
-![Liste des 13 exécutions de workflow sur `main`, toutes réussies (aucune capture d'une page de Pull Request fusionnée avec checks pour l'instant)](git/git-actions-all-workflows.png)
+![PR #1 "docs: add architecture docs and execution proofs" prête à merger : les 4 checks obligatoires sont passés, statut "Ready to merge"](branches/branches-pr-ready-to-merge.png)
+
+![PR #1 fusionnée ("Merged") dans `main` depuis la branche `docs/preuves-execution`](branches/branches-pr-merged.png)
+
+![Run CI déclenché par le merge de la PR #1 : les 4 jobs `test`, `source-scan`, `build`, `publish` sont verts, statut Success en 8m32s](branches/branches-pr-merge-ci-success.png)
+
+![Liste des exécutions de workflow sur `main`, toutes réussies](git/git-actions-all-workflows.png)
 
 ## CI/CD
 
-- [ ] Un run complet du pipeline GitHub Actions vert (les 4 jobs : `test`, `source-scan`, `build`, `publish`)
-- [ ] La page du package GHCR `locatic` montrant une image publiée
+- [x] Un run complet du pipeline GitHub Actions vert (les 4 jobs : `test`, `source-scan`, `build`, `publish`)
+- [x] La page du package GHCR `locatic` montrant une image publiée
 
 ![Run "fix: add dashboard provider grafana" (#13) : les 4 jobs `test`, `source-scan`, `build`, `publish` sont verts, statut Success en 8m54s](git/git-ci-pipeline-run-success.png)
 
 ![`docker push` puis `docker pull` de `ghcr.io/camillepaillou/locatic:latest` avec le même digest, confirmant la publication de l'image](packageGHCR/ghcr-docker-push-pull.png)
 
-![⚠️ Page "Package settings" du package GHCR (gestion des accès Actions/Codespaces) — ne montre pas encore la page principale du package avec le tag/l'image publiée](packageGHCR/ghcr-package-settings-access.png)
+![Page du package GHCR `locatic` : versions récentes publiées (`latest`, `f523d9f`, `f36a535`...), dernière publication il y a 5 minutes, 30 téléchargements au total](packageGHCR/ghcr-package-published-versions.png)
+
+![Paramètres du package GHCR : accès Actions accordé au dépôt `Locatic` en écriture](packageGHCR/ghcr-package-settings-access.png)
 
 ## Terraform
 
@@ -39,8 +47,8 @@ kubectl get pvc -n locatic
 ```bash
 cd infra/ansible && ansible-playbook -i inventory.yml site.yml -v
 ```
-- [ ] Sortie complète d'une exécution réussie
-- [ ] Sortie montrant `changed=0` sur les tâches déjà appliquées (idempotence), et `changed=1` sur une ressource réellement modifiée (voir `docs/ansible.md`)
+- [x] Sortie complète d'une exécution réussie
+- [x] Sortie montrant `changed=0` sur les tâches déjà appliquées (idempotence), et `changed=1` sur une ressource réellement modifiée (voir `docs/ansible.md`)
 
 ![`ansible-playbook --list-tasks` : liste complète des tâches du play (installation, lecture des outputs Terraform, secret GHCR, application des manifestes Kubernetes)](ansible/ansible-list-tasks.png)
 
@@ -56,7 +64,7 @@ cd infra/ansible && ansible-playbook -i inventory.yml site.yml -v
 kubectl get all -n locatic
 kubectl get all -n monitoring
 ```
-- [ ] Tous les pods `Running`/`Ready`
+- [x] Tous les pods `Running`/`Ready`
 
 ![`kubectl get all -n locatic` et `kubectl get all -n monitoring` : tous les pods sont `Running` avec tous leurs conteneurs `Ready` (app, nginx, Prometheus, Grafana, Alertmanager, kube-state-metrics, node-exporter)](kubernetes/kubernetes-get-all-locatic-monitoring.png)
 
@@ -67,7 +75,7 @@ curl -i http://localhost:8081/
 curl -i http://localhost:8081/health/live
 curl -i http://localhost:8081/health/ready
 ```
-- [ ] Capture du navigateur montrant l'application accessible via le port-forward Nginx (page d'accueil stylée)
+- [x] Capture du navigateur montrant l'application accessible via le port-forward Nginx (page d'accueil stylée)
 
 ![Page d'accueil "Bienvenue sur Locatic" ouverte dans le navigateur via le port-forward Nginx, avec les liens Marques/Modèles/Voitures/Client/Booking](nginx/nginx-browser-homepage.png)
 
@@ -79,7 +87,7 @@ curl -i http://localhost:8081/health/ready
 
 ## Persistance SQLite
 
-- [ ] `ls -la /data` avant/après suppression d'un pod applicatif, montrant que `locatic.db` garde la même taille/date
+- [x] `ls -la /data` avant/après suppression d'un pod applicatif, montrant que `locatic.db` garde la même taille/date
 
 ![Avant suppression : `locatic.db` fait 53248 octets, daté du 2 juillet 21:42. Le pod applicatif est ensuite supprimé (`kubectl delete pod`) et redémarre automatiquement](persistanceSQLite/sqlite-before-pod-delete.png)
 
