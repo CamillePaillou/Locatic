@@ -103,9 +103,22 @@
             adminPassword: "{{ grafana_admin_password }}"
             service:
               type: "{{ monitoring_service_type }}"
-            # Dashboard "as code" : le chart génère lui-même le ConfigMap
-            # avec les bons labels, dans le namespace monitoring — pas
-            # besoin de gérer la découverte cross-namespace pour ça.
+            # Dashboard "as code" : "dashboards" génère le ConfigMap avec le
+            # JSON, mais Grafana ne le charge que si "dashboardProviders"
+            # déclare explicitement où le lire — sans ça, le ConfigMap
+            # existe mais n'est jamais monté (vécu concrètement).
+            dashboardProviders:
+              dashboardproviders.yaml:
+                apiVersion: 1
+                providers:
+                  - name: default
+                    orgId: 1
+                    folder: ""
+                    type: file
+                    disableDeletion: false
+                    editable: true
+                    options:
+                      path: /var/lib/grafana/dashboards/default
             dashboards:
               default:
                 locatic-overview:
