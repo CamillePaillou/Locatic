@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: locatic-app
+spec:
+  selector:
+    matchLabels:
+      app: locatic
+  podMetricsEndpoints:
+    - port: http
+      path: "{{ metrics_path }}"
+      interval: 15s

@@ -55,6 +55,20 @@ ghcr_registry: ghcr.io
 # `docker login ghcr.io` — aucun secret dupliqué à gérer à part.
 docker_config_path: "~/.docker/config.json"
 
-# --- Monitoring (branché à l'étape 17, préparé dès maintenant) -----------
+# --- Monitoring (étape 17) ----------------------------------------------
 metrics_port: 8080
 metrics_path: /metrics
+
+# Namespace séparé de "locatic" : le monitoring n'est pas un composant
+# applicatif, convention standard de le garder à part.
+monitoring_namespace: monitoring
+monitoring_chart_version: "87.5.1"
+monitoring_service_type: NodePort
+monitoring_retention: "3d"
+monitoring_prometheus_resources:
+  requests:
+    cpu: "100m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"

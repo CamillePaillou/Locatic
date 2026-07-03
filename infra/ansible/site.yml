@@ -20,6 +20,7 @@
         - terraform
         - kubectl
         - minikube
+        - helm
       loop_control:
         label: "{{ item }}"
       register: tool_check
@@ -65,7 +66,57 @@
           le secret d'accès à l'image privée.
         success_msg: "Identifiants GHCR trouvés dans l'environnement."
 
-    # --- 4. Rendu et application des manifestes Kubernetes -----------------
+    # --- 4. Identifiants Grafana (jamais committés) -----------------------
+    - name: Lire le mot de passe admin Grafana depuis l'environnement
+      ansible.builtin.set_fact:
+        grafana_admin_password: "{{ lookup('env', 'GRAFANA_ADMIN_PASSWORD') }}"
+      no_log: true
+
+    - name: Vérifier que le mot de passe Grafana est bien fourni
+      ansible.builtin.assert:
+        that:
+          - grafana_admin_password | length > 0
+        fail_msg: >-
+          GRAFANA_ADMIN_PASSWORD doit être exporté avant de lancer ce
+          playbook (export GRAFANA_ADMIN_PASSWORD=...).
+        success_msg: "Mot de passe Grafana trouvé dans l'environnement."
+
+    # --- 5. Stack de monitoring (Prometheus, Grafana, Alertmanager) --------
+    # Installée AVANT nos propres manifestes : nos PodMonitor (plus bas)
+    # sont des ressources personnalisées (CRD) fournies par ce chart —
+    # elles n'existent dans le cluster qu'une fois qu'il est installé.
+    - name: Ajouter le dépôt Helm prometheus-community
+      kubernetes.core.helm_repository:
+        name: prometheus-community
+        repo_url: https://prometheus-community.github.io/helm-charts
+
+    - name: Installer/mettre à jour kube-prometheus-stack
+      kubernetes.core.helm:
+        name: kube-prometheus-stack
+        chart_ref: prometheus-community/kube-prometheus-stack
+        chart_version: "{{ monitoring_chart_version }}"
+        release_namespace: "{{ monitoring_namespace }}"
+        create_namespace: true
+        kube_context: "{{ kube_context }}"
+        values:
+          grafana:
+            adminPassword: "{{ grafana_admin_password }}"
+            service:
+              type: "{{ monitoring_service_type }}"
+          prometheus:
+            prometheusSpec:
+              # Sans ça, Prometheus n'accepte de scraper que des
+              # ServiceMonitor/PodMonitor du namespace "monitoring" —
+              # notre app et Nginx tournent dans "locatic".
+              serviceMonitorSelectorNilUsesHelmValues: false
+              podMonitorSelectorNilUsesHelmValues: false
+              podMonitorNamespaceSelector: {}
+              serviceMonitorNamespaceSelector: {}
+              resources: "{{ monitoring_prometheus_resources }}"
+              retention: "{{ monitoring_retention }}"
+      no_log: true
+
+    # --- 6. Rendu et application des manifestes Kubernetes -----------------
     # Le secret est appliqué à part, avec no_log, pour ne jamais faire
     # apparaître les identifiants GHCR dans la sortie du playbook. Les
     # autres ressources restent visibles pour un débogage normal.

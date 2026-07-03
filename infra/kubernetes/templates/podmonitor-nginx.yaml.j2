@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: locatic-nginx
+spec:
+  selector:
+    matchLabels:
+      app: locatic-nginx
+  podMetricsEndpoints:
+    # Port du sidecar nginx-exporter, pas celui de Nginx lui-même (80) —
+    # Nginx ne parle pas le format Prometheus.
+    - port: metrics
+      path: /metrics
+      interval: 15s
