@@ -33,6 +33,18 @@ nginx_resources:
     cpu: "200m"
     memory: "64Mi"
 
+# Sidecar qui convertit le stub_status de Nginx (format texte propriétaire)
+# en métriques Prometheus, exposées sur son propre port.
+nginx_exporter_image: "nginx/nginx-prometheus-exporter:1.5.1"
+nginx_exporter_port: 9113
+nginx_exporter_resources:
+  requests:
+    cpu: "20m"
+    memory: "16Mi"
+  limits:
+    cpu: "100m"
+    memory: "32Mi"
+
 # NodePort (simple sur minikube, via `minikube service`) ou LoadBalancer
 # (nécessite `minikube tunnel` en tâche de fond).
 service_type: NodePort

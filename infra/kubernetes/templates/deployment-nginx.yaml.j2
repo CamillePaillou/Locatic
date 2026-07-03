@@ -13,6 +13,13 @@ spec:
     metadata:
       labels:
         app: locatic-nginx
+      annotations:
+        # Le port scrapé par Prometheus est celui de l'exporter (sidecar),
+        # pas celui de Nginx lui-même : Nginx ne parle pas le format
+        # Prometheus, seul l'exporter le fait.
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ nginx_exporter_port }}"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: nginx
@@ -42,6 +49,23 @@ spec:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 20
+
+        # Sidecar : lit /nginx_status (via localhost, même pod que Nginx) et
+        # réexpose ces données au format Prometheus sur son propre port.
+        - name: nginx-exporter
+          image: "{{ nginx_exporter_image }}"
+          args:
+            - "--nginx.scrape-uri=http://127.0.0.1/nginx_status"
+          ports:
+            - name: metrics
+              containerPort: {{ nginx_exporter_port }}
+          resources:
+            requests:
+              cpu: "{{ nginx_exporter_resources.requests.cpu }}"
+              memory: "{{ nginx_exporter_resources.requests.memory }}"
+            limits:
+              cpu: "{{ nginx_exporter_resources.limits.cpu }}"
+              memory: "{{ nginx_exporter_resources.limits.memory }}"
       volumes:
         - name: nginx-config
           configMap:

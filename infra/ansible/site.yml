@@ -77,22 +77,50 @@
         definition: "{{ lookup('template', kubernetes_manifests_dir + '/secret-ghcr.yaml.j2') | from_yaml }}"
       no_log: true
 
-    - name: Lister les autres templates Kubernetes disponibles
+    # `find` ne garantit pas un ordre alphabétique : on applique donc les
+    # ConfigMaps/Secrets explicitement AVANT les Deployments qui les
+    # montent, sinon un pod peut démarrer avec une config pas encore à
+    # jour (vécu concrètement : Nginx démarré avant que le ConfigMap
+    # contienne /nginx_status, jamais rechargé depuis).
+    - name: Lister les ConfigMaps/Secrets Kubernetes
+      ansible.builtin.find:
+        paths: "{{ kubernetes_manifests_dir }}"
+        patterns:
+          - "configmap-*.yml.j2"
+          - "configmap-*.yaml.j2"
+        recurse: true
+      register: k8s_config_templates
+
+    - name: Rendre et appliquer les ConfigMaps/Secrets
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ locatic_namespace }}"
+        context: "{{ kube_context }}"
+        definition: "{{ lookup('template', item.path) | from_yaml }}"
+      loop: "{{ k8s_config_templates.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      when: k8s_config_templates.matched > 0
+
+    - name: Lister les Deployments/Services Kubernetes
       ansible.builtin.find:
         paths: "{{ kubernetes_manifests_dir }}"
         patterns:
           - "*.yml.j2"
           - "*.yaml.j2"
-        excludes: "secret-ghcr.yaml.j2"
+        excludes:
+          - "secret-ghcr.yaml.j2"
+          - "configmap-*.yml.j2"
+          - "configmap-*.yaml.j2"
         recurse: true
-      register: k8s_templates
+      register: k8s_workload_templates
 
     - name: Avertir si aucun autre template Kubernetes n'est encore présent
       ansible.builtin.debug:
         msg: >-
           Aucun template trouvé dans {{ kubernetes_manifests_dir }} (à part
-          le secret GHCR).
-      when: k8s_templates.matched == 0
+          le secret GHCR et les ConfigMaps).
+      when: k8s_workload_templates.matched == 0
 
     - name: Rendre et appliquer les ressources Kubernetes (Nginx, application, monitoring)
       kubernetes.core.k8s:
@@ -100,7 +128,7 @@
         namespace: "{{ locatic_namespace }}"
         context: "{{ kube_context }}"
         definition: "{{ lookup('template', item.path) | from_yaml }}"
-      loop: "{{ k8s_templates.files }}"
+      loop: "{{ k8s_workload_templates.files }}"
       loop_control:
         label: "{{ item.path | basename }}"
-      when: k8s_templates.matched > 0
+      when: k8s_workload_templates.matched > 0
