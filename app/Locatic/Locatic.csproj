@@ -13,6 +13,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.8" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
     <!-- Force la version corrigée du binaire natif SQLite (CVE-2025-6965) :
          Microsoft.EntityFrameworkCore.Sqlite 8.0.8 dépend transitivement de
          SQLitePCLRaw.bundle_e_sqlite3 2.1.6, qui embarque une SQLite

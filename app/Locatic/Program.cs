@@ -3,6 +3,7 @@ using Locatic.Interfaces;
 using Locatic.Repositories;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Compte et chronomètre chaque requête HTTP (méthode, route, code retour).
+// Placé juste après UseRouting pour que le nom de la route soit connu.
+app.UseHttpMetrics();
+
 app.UseAuthorization();
 
 // Liveness : le process répond, sans vérifier de dépendance externe.
@@ -56,6 +61,9 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready"),
 });
+
+// Endpoint scrapé par Prometheus (étape 17).
+app.MapMetrics();
 
 app.MapControllerRoute(
     name: "default",
