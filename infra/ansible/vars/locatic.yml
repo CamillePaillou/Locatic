@@ -50,10 +50,10 @@ nginx_exporter_resources:
 service_type: NodePort
 
 # --- Registry privée (GHCR) ---------------------------------------------
+# Le secret d'accès (username/token) est construit à partir des variables
+# d'environnement GHCR_USERNAME/GHCR_TOKEN au moment de lancer le playbook,
+# jamais stocké ici ni dans un fichier.
 ghcr_registry: ghcr.io
-# Réutilise les identifiants déjà enregistrés localement par
-# `docker login ghcr.io` — aucun secret dupliqué à gérer à part.
-docker_config_path: "~/.docker/config.json"
 
 # --- Monitoring (étape 17) ----------------------------------------------
 metrics_port: 8080
